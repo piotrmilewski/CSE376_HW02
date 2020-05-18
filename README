@@ -1,0 +1,41 @@
+### What I Did
+1. I started off by working on the lkmalloc library call and I very quickly realized that I'm not going to get far without designing a data structure to use so I stopped coding and started brainstorming on a data structure that would work for me. After reading up on piazza and brainstorming some more, I decided that a Binary Search Tree would work best for keeping the memory addresses stored. 
+2. I then started working on a binary search tree class which ended up being called memBST for memory Binary Search Tree and I defined my data structure in memBST.h and then made a static variable in memBST.c to store the library. This way other classes can only access the Binary Search Tree using accessor methods and they can't peek into it normally. I then worked on making methods that insert and 'free' the nodes. When 'free'd, the node isn't removed from the Binary Search Tree since that would be inefficient, rather it just has an allocation variable set to 0 such that my code internally knows that that node is available. I also included code to be called at the end of my program that simply free'd all the nodes such that my code didn't leak any memory. 
+3. After I finished the memBST.c class, I finished my lkmalloc() and did some rudimentary testing.
+4. Then I began work on lkfree() and that didn't take me long since memBST.c already existed and I just had to create 2 methods inside memBST.c that free'd the node depending on whether it was an exact pointer or an approximate pointer. I did some rudimentary testing for lkfree() and then proceeded to lkreport().
+4.1. I should note that lkmalloc() and lkfree() both take O(logn) at this point since inserting a node is O(logn) and 'free'ing a node is also O(logn) since you are just looking for the right node to set the allocation bit to 0.
+5. I started lkreport() by designing a way to store the records. I decided that it would be most efficient to create a linked list that kept track of the head and the tail such that insertion would be O(1) and in order to read all the records it would be O(n). The methods that I created in recordsLL.c were recordInsert() that just inserted a record into the linked list, freeAllRecords() that freed all the records at the end to prevent memory leaks, and dumpReport() which is called by lkreport() to put all the record data into a fd designated by the user. dumpReport() relies on flags set by lkreport() and flags set in the record upon insertion to determine which record to send out.
+6. Once I finished lkreport(), I went back to my lkmalloc() and lkfree() calls and called recordInsert() with the appropriate arguments wherever I needed to insert a record to keep track of. I decided at this point to let records hold BST nodes so that they can keep track of what happened over the course of the program.
+7. Now I started creating test files to test my code. I decided to make 3 test files, test01.c to test lkmalloc(), test02.c to test lkfree() and test03.c to test lkreport(). I decided to have these files output their data into stdout since I felt that it would be easier to check what they output by calling them individually in the terminal session instead of opening up 3 different files every time. All 3 test files call the methods with different flags and check how they work. While testing I discovered a flaw in my code which was that when a malloc'd node was free'd and then remalloc'd, the record that originally kept the first free'd node would now point to the remalloc'd node and that lkreport() would not print out the correct info. Thus I decided to let the BST nodes hold a record and when they were free'd then they would update that record and lose its reference since the record only cares about when the memory is allocated and when it is freed. 
+8. After I fixed this hurdle the rest of testing went by smoothly and I only had to fix minor bits of my code that didn't update a value correctly or forgot to update a variable. I then made runTests.sh which would run the 3 test files in numerical order.
+9. Finally I decided to fix up my basic makefile that only contained code to compile one test at a time and made it so that it could compile individual tests, compile all tests at once, compile all tests at once and run them, cleanup all the files, build the library, and generate dependency files.
+10. After the makefile I begun work on this README and then I submitted my assignment :).
+
+### files that are included in my submission
+test01.c test02.c test03.c
+^ these files are small test programs that test the lkmalloc library
+makefile
+^ compiles all the code, cleans it, generates dependencies, runs the tests
+recordsLL.c recordsLL.h
+^ contains a linked list of records that is used by lkreport()
+memBST.c memBST.h
+^ contains the binary search tree used by lkmalloc() and lkfree()
+lkmalloc.c lkmalloc.h
+^ the library that we were tasked with making
+runTests.sh
+^ the script that runs all the small test programs
+
+### using the makefile
+make = will create 3 test executables that you can run individually or run all at once with runRests.sh
+make clean = will clean the directory of all .o, .a, .d, and test files
+make run_tests = will create 3 test executables and run them right away
+make buildLibrary = will build just the lkmalloc library
+make depend = will generate the dependency set of files automatically
+make test01 / make test02 / make test03 = generate the test file that you specify
+
+### extra notes
+1. I didn't do any of the extra credit other than submitting the assignment early.
+2. I am not 100% sure that I got my makefile to use my dependency files generated by make depend since I wasn't sure how to check them and the professor said he would go over make depend and stuff during class.
+3. The test files don't store there output anywhere but print them out to stdout.
+4. The test files call the malloc and free functions and then will print out a lkreport() which shows that the malloc/free functions did their job. Sometimes it won't print out a lkreport() if checking for a flag that prints a warning.
+5. Have a nice day :)
